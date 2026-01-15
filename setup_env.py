@@ -69,7 +69,9 @@ COMPILER_EXTRA_ARGS = {
 }
 
 OS_EXTRA_ARGS = {
-    "Windows":["-T", "ClangCL"],
+    # Prefer MSVC toolchain by default. ClangCL requires an extra VS component and
+    # is not always installed.
+    "Windows": [],
 }
 
 ARCH_ALIAS = {
@@ -151,7 +153,7 @@ def prepare_model():
 
 def setup_gguf():
     # Install the pip package
-    run_command([sys.executable, "-m", "pip", "install", "3rdparty/llama.cpp/gguf-py"], log_step="install_gguf")
+    run_command([sys.executable, "-m", "pip", "install", "./3rdparty/llama.cpp/gguf-py"], log_step="install_gguf")
 
 def gen_code():
     _, arch = system_info()
@@ -211,7 +213,10 @@ def compile():
         logging.error(f"Arch {arch} is not supported yet")
         exit(0)
     logging.info("Compiling the code using CMake.")
-    run_command(["cmake", "-B", "build", *COMPILER_EXTRA_ARGS[arch], *OS_EXTRA_ARGS.get(platform.system(), []), "-DCMAKE_C_COMPILER=clang", "-DCMAKE_CXX_COMPILER=clang++"], log_step="generate_build_files")
+    run_command(
+        ["cmake", "-B", "build", *COMPILER_EXTRA_ARGS[arch], *OS_EXTRA_ARGS.get(platform.system(), [])],
+        log_step="generate_build_files",
+    )
     # run_command(["cmake", "--build", "build", "--target", "llama-cli", "--config", "Release"])
     run_command(["cmake", "--build", "build", "--config", "Release"], log_step="compile")
 
