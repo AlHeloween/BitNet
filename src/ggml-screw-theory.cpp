@@ -1,7 +1,7 @@
 #include "ggml-screw-theory.h"
 #include "ggml.h"
-#include "../../lib/math_dualQuat.h"
-#include "../../lib/math_Quat.h"
+#include "../../../lib/math_dualQuat.h"
+#include "../../../lib/math_Quat.h"
 
 #include <cmath>
 #include <cstring>

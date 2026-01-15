@@ -281,7 +281,7 @@ void aurora_memory_bank_free(aurora_memory_bank_t* bank) {
     // Free all entries
     for (int i = 0; i < bank->n_clusters; i++) {
         for (int j = 0; j < bank->slot_counts[i]; j++) {
-            aurora_memory_entry_free(bank->slots[i][j]);
+            aurora_memory_entry_free(&bank->slots[i][j]);
         }
         free(bank->slots[i]);
     }
@@ -432,14 +432,14 @@ bool aurora_memory_bank_add(
     // Grow slot if needed
     if (bank->slot_counts[slot_idx] >= bank->slot_capacities[slot_idx]) {
         int new_capacity = (bank->slot_capacities[slot_idx] == 0) ? 8 : bank->slot_capacities[slot_idx] * 2;
-        bank->slots[slot_idx] = (aurora_memory_entry_t**)realloc(
+        bank->slots[slot_idx] = (aurora_memory_entry_t*)realloc(
             bank->slots[slot_idx],
-            new_capacity * sizeof(aurora_memory_entry_t*)
+            new_capacity * sizeof(aurora_memory_entry_t)
         );
         bank->slot_capacities[slot_idx] = new_capacity;
     }
     
-    bank->slots[slot_idx][bank->slot_counts[slot_idx]] = entry;
+        bank->slots[slot_idx][bank->slot_counts[slot_idx]] = *entry;
     bank->slot_counts[slot_idx]++;
     bank->total_entries++;
     
@@ -489,15 +489,15 @@ bool aurora_memory_bank_add_dual_complex(
     // Grow slot if needed
     if (bank->slot_counts[slot_idx] >= bank->slot_capacities[slot_idx]) {
         int new_capacity = (bank->slot_capacities[slot_idx] == 0) ? 8 : bank->slot_capacities[slot_idx] * 2;
-        bank->slots[slot_idx] = (aurora_memory_entry_t**)realloc(
+        bank->slots[slot_idx] = (aurora_memory_entry_t*)realloc(
             bank->slots[slot_idx],
-            new_capacity * sizeof(aurora_memory_entry_t*)
+            new_capacity * sizeof(aurora_memory_entry_t)
         );
         bank->slot_capacities[slot_idx] = new_capacity;
     }
     
     // Add to slot
-    bank->slots[slot_idx][bank->slot_counts[slot_idx]] = entry;
+        bank->slots[slot_idx][bank->slot_counts[slot_idx]] = *entry;
     bank->slot_counts[slot_idx]++;
     bank->total_entries++;
     
@@ -539,7 +539,7 @@ int aurora_memory_bank_query(
                 );
                 all_entries_capacity = new_capacity;
             }
-            all_entries[total_entries++] = bank->slots[slot_idx][j];
+            all_entries[total_entries++] = &bank->slots[slot_idx][j];
         }
     }
     
@@ -623,7 +623,7 @@ int aurora_memory_bank_query_embedding(
                 );
                 all_entries_capacity = new_capacity;
             }
-            all_entries[total_entries++] = bank->slots[slot_idx][j];
+            all_entries[total_entries++] = &bank->slots[slot_idx][j];
         }
     }
     
@@ -707,7 +707,7 @@ int aurora_memory_bank_query_dual_complex(
                 );
                 all_entries_capacity = new_capacity;
             }
-            all_entries[total_entries++] = bank->slots[slot_idx][j];
+            all_entries[total_entries++] = &bank->slots[slot_idx][j];
         }
     }
     
@@ -959,7 +959,7 @@ int aurora_memory_bank_save(const aurora_memory_bank_t* bank, const char* filepa
         int count = bank->slot_counts[i];
         fwrite(&count, sizeof(int), 1, f);
         for (int j = 0; j < count; j++) {
-            aurora_memory_entry_t* entry = bank->slots[i][j];
+            aurora_memory_entry_t* entry = &bank->slots[i][j];
             // Write entry
             int32_t md5_len = (int32_t)strlen(entry->md5_tag);
             int32_t text_len = (int32_t)strlen(entry->text);
@@ -1128,14 +1128,14 @@ aurora_memory_bank_t* aurora_memory_bank_load(const char* filepath, int n_cluste
             // Grow slot if needed
             if (bank->slot_counts[i] >= bank->slot_capacities[i]) {
                 int new_capacity = (bank->slot_capacities[i] == 0) ? 8 : bank->slot_capacities[i] * 2;
-                bank->slots[i] = (aurora_memory_entry_t**)realloc(
+                bank->slots[i] = (aurora_memory_entry_t*)realloc(
                     bank->slots[i],
-                    new_capacity * sizeof(aurora_memory_entry_t*)
+                    new_capacity * sizeof(aurora_memory_entry_t)
                 );
                 bank->slot_capacities[i] = new_capacity;
             }
             
-            bank->slots[i][bank->slot_counts[i]] = entry;
+            bank->slots[i][bank->slot_counts[i]] = *entry;
             bank->slot_counts[i]++;
             bank->total_entries++;
             add_md5(bank, md5_tag);

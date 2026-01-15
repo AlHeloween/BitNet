@@ -72,7 +72,7 @@ struct ggml_tensor * ggml_aurora_memory_read(
         return NULL;
     }
     
-    if (query_embedding->n_dims != 1) {
+    if (ggml_n_dims(query_embedding) != 1) {
         // Query embedding should be 1D: [dim]
         return NULL;
     }
@@ -171,7 +171,7 @@ struct ggml_tensor * ggml_aurora_memory_read_dual_complex(
         return NULL;
     }
     
-    if (query_primal->n_dims != 1) {
+    if (ggml_n_dims(query_primal) != 1) {
         return NULL;
     }
     
@@ -222,8 +222,8 @@ void ggml_aurora_memory_read_dual_complex_impl(
     
     // Query memory banks using dual-complex similarity
     aurora_memory_entry_t** entries = (aurora_memory_entry_t**)malloc(k_read * sizeof(aurora_memory_entry_t*));
-    int count = aurora_memory_banks_query_dual_complex(
-        memory_banks,
+    int count = aurora_memory_bank_query_dual_complex(
+        memory_banks->verified,  // Query verified bank
         query_primal_data,
         query_dual_data,
         candidate_slots,

@@ -1,6 +1,6 @@
 #include "ggml-dual-complex.h"
 #include "ggml.h"
-#include "../../lib/math_dualPhaser.h"
+#include "../../../lib/math_dualPhaser.h"
 
 #include <cmath>
 #include <cstring>
@@ -50,8 +50,8 @@ struct ggml_tensor* ggml_dual_complex(
     // Stack primal and dual along last dimension
     // primal: [..., dim], dual: [..., dim] -> output: [..., dim, 2]
     struct ggml_tensor* result = ggml_new_tensor(ctx, GGML_TYPE_F32, 
-        primal->n_dims + 1, primal->ne);
-    result->ne[primal->n_dims] = 2;
+        ggml_n_dims(primal) + 1, primal->ne);
+    result->ne[ggml_n_dims(primal)] = 2;
     
     // Copy data: [..., dim, 0] = primal, [..., dim, 1] = dual
     float* out_data = (float*)result->data;
@@ -59,7 +59,7 @@ struct ggml_tensor* ggml_dual_complex(
     const float* dual_data = (const float*)dual->data;
     
     int n_elements = 1;
-    for (int i = 0; i < primal->n_dims; i++) {
+    for (int i = 0; i < ggml_n_dims(primal); i++) {
         n_elements *= primal->ne[i];
     }
     
@@ -76,7 +76,7 @@ struct ggml_tensor* ggml_dual_complex_primal(
     struct ggml_tensor* dc
 ) {
     // Extract [..., 0] from [..., 2]
-    int n_dims = dc->n_dims - 1;
+    int n_dims = ggml_n_dims(dc) - 1;
     int64_t* ne = new int64_t[n_dims];
     for (int i = 0; i < n_dims; i++) {
         ne[i] = dc->ne[i];
@@ -105,7 +105,7 @@ struct ggml_tensor* ggml_dual_complex_dual(
     struct ggml_tensor* dc
 ) {
     // Extract [..., 1] from [..., 2]
-    int n_dims = dc->n_dims - 1;
+    int n_dims = ggml_n_dims(dc) - 1;
     int64_t* ne = new int64_t[n_dims];
     for (int i = 0; i < n_dims; i++) {
         ne[i] = dc->ne[i];
@@ -134,8 +134,8 @@ struct ggml_tensor* ggml_dual_complex_add(
     struct ggml_tensor* dc1,
     struct ggml_tensor* dc2
 ) {
-    GGML_ASSERT(dc1->n_dims == dc2->n_dims);
-    for (int i = 0; i < dc1->n_dims; i++) {
+    GGML_ASSERT(ggml_n_dims(dc1) == ggml_n_dims(dc2));
+    for (int i = 0; i < ggml_n_dims(dc1); i++) {
         GGML_ASSERT(dc1->ne[i] == dc2->ne[i]);
     }
     
@@ -146,7 +146,7 @@ struct ggml_tensor* ggml_dual_complex_add(
     float* out_data = (float*)result->data;
     
     int n_elements = 1;
-    for (int i = 0; i < dc1->n_dims - 1; i++) {
+    for (int i = 0; i < ggml_n_dims(dc1) - 1; i++) {
         n_elements *= dc1->ne[i];
     }
     
@@ -173,8 +173,8 @@ struct ggml_tensor* ggml_dual_complex_mul(
     struct ggml_tensor* dc1,
     struct ggml_tensor* dc2
 ) {
-    GGML_ASSERT(dc1->n_dims == dc2->n_dims);
-    for (int i = 0; i < dc1->n_dims; i++) {
+    GGML_ASSERT(ggml_n_dims(dc1) == ggml_n_dims(dc2));
+    for (int i = 0; i < ggml_n_dims(dc1); i++) {
         GGML_ASSERT(dc1->ne[i] == dc2->ne[i]);
     }
     
@@ -185,7 +185,7 @@ struct ggml_tensor* ggml_dual_complex_mul(
     float* out_data = (float*)result->data;
     
     int n_elements = 1;
-    for (int i = 0; i < dc1->n_dims - 1; i++) {
+    for (int i = 0; i < ggml_n_dims(dc1) - 1; i++) {
         n_elements *= dc1->ne[i];
     }
     
@@ -219,7 +219,7 @@ struct ggml_tensor* ggml_dual_complex_conjugate(
     float* out_data = (float*)result->data;
     
     int n_elements = 1;
-    for (int i = 0; i < dc->n_dims - 1; i++) {
+    for (int i = 0; i < ggml_n_dims(dc) - 1; i++) {
         n_elements *= dc->ne[i];
     }
     
@@ -246,7 +246,7 @@ struct ggml_tensor* ggml_dual_complex_normalize(
     float* out_data = (float*)result->data;
     
     int n_elements = 1;
-    for (int i = 0; i < dc->n_dims - 1; i++) {
+    for (int i = 0; i < ggml_n_dims(dc) - 1; i++) {
         n_elements *= dc->ne[i];
     }
     

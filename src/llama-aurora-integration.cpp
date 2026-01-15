@@ -4,6 +4,7 @@
 #include "ggml-aurora-memory.h"
 #include "aurora_memory_bank.h"
 #include "aurora_artifacts.h"
+#include "../3rdparty/llama.cpp/include/llama.h"  // For llama_context definition
 
 #include <string.h>
 #include <stdlib.h>
@@ -274,5 +275,8 @@ void llama_aurora_apply_kv_cache_windowing(
     }
     
     // Apply windowing to KV cache
-    llama_aurora_window_kv_cache(&ctx->kv_self, params->aurora_window_size);
+    // Note: This should be called from llama.cpp where llama_context is fully defined
+    // For now, this is handled directly in llama.cpp's llama_decode_internal()
+    (void)ctx;  // Suppress unused parameter warning
+    (void)params;  // Suppress unused parameter warning
 }

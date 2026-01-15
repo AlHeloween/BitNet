@@ -17,19 +17,19 @@ struct ggml_tensor* ggml_temporal_evolve(
     }
     
     // Validate inputs
-    GGML_ASSERT(z_primal->n_dims == z_dual->n_dims);
-    for (int i = 0; i < z_primal->n_dims; i++) {
+    GGML_ASSERT(ggml_n_dims(z_primal) == ggml_n_dims(z_dual));
+    for (int i = 0; i < ggml_n_dims(z_primal); i++) {
         GGML_ASSERT(z_primal->ne[i] == z_dual->ne[i]);
     }
     
     // Get dimensions
     int batch_size = 1;
     int seq_len = 1;
-    int dim = (int)z_primal->ne[z_primal->n_dims - 1];
+    int dim = (int)z_primal->ne[ggml_n_dims(z_primal) - 1];
     
-    if (z_primal->n_dims == 2) {
+    if (ggml_n_dims(z_primal) == 2) {
         seq_len = (int)z_primal->ne[0];
-    } else if (z_primal->n_dims == 3) {
+    } else if (ggml_n_dims(z_primal) == 3) {
         batch_size = (int)z_primal->ne[0];
         seq_len = (int)z_primal->ne[1];
     }
@@ -38,10 +38,10 @@ struct ggml_tensor* ggml_temporal_evolve(
     struct ggml_tensor* result_primal = NULL;
     struct ggml_tensor* result_dual = NULL;
     
-    if (z_primal->n_dims == 1) {
+    if (ggml_n_dims(z_primal) == 1) {
         result_primal = ggml_new_tensor_1d(ctx, GGML_TYPE_F32, dim);
         result_dual = ggml_new_tensor_1d(ctx, GGML_TYPE_F32, dim);
-    } else if (z_primal->n_dims == 2) {
+    } else if (ggml_n_dims(z_primal) == 2) {
         int64_t ne[2] = {seq_len, dim};
         result_primal = ggml_new_tensor(ctx, GGML_TYPE_F32, 2, ne);
         result_dual = ggml_new_tensor(ctx, GGML_TYPE_F32, 2, ne);

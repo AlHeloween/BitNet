@@ -1,4 +1,5 @@
 #include "ggml-gpu-metrics.h"
+#include <cstdio>
 
 #ifdef GGML_USE_CUDA
 #include <cuda_runtime.h>

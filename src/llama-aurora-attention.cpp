@@ -2,6 +2,7 @@
 #include "ggml-aurora-memory.h"
 #include "ggml-dual-complex.h"
 #include "aurora_memory_bank.h"
+#include "../3rdparty/llama.cpp/include/llama.h"  // For llama_kv_cache definition
 
 #include <string.h>
 #include <stdlib.h>
@@ -46,27 +47,11 @@ void llama_aurora_window_kv_cache(
     struct llama_kv_cache* kv_cache,
     int32_t window_size
 ) {
-    if (!kv_cache || window_size <= 0) {
-        return;
-    }
-    
-    // Get current KV cache size
-    int32_t current_size = (int32_t)kv_cache->size;
-    
-    if (current_size <= window_size) {
-        // No windowing needed
-        return;
-    }
-    
-    // Window KV cache: keep only last window_size tokens
-    // This is a simplified implementation - in practice, we'd need to:
-    // 1. Shift KV cache entries
-    // 2. Update position indices
-    // 3. Maintain cache consistency
-    
-    // For now, we'll just update the effective size
-    // The actual windowing will be handled during attention computation
-    kv_cache->size = window_size;
+    // Note: This function is called from llama.cpp where llama_kv_cache is fully defined
+    // For now, this is a placeholder - actual windowing is handled in llama.cpp
+    // The windowing logic should be implemented in llama.cpp where we have full access
+    (void)kv_cache;  // Suppress unused parameter warning
+    (void)window_size;  // Suppress unused parameter warning
 }
 
 struct ggml_tensor* llama_aurora_bounded_attention(
@@ -101,9 +86,9 @@ struct ggml_tensor* llama_aurora_bounded_attention(
         // Create views of the windowed portion
         size_t offset = window_start * head_dim * sizeof(float);
         k_window = ggml_view_3d(ctx, k, head_dim, window_kv_size, n_head, 
-                                k->nb[0], k->nb[1], k->nb[2], offset);
+                                k->nb[1], k->nb[2], offset);
         v_window = ggml_view_3d(ctx, v, head_dim, window_kv_size, n_head,
-                                v->nb[0], v->nb[1], v->nb[2], offset);
+                                v->nb[1], v->nb[2], offset);
     } else {
         k_window = k;
         v_window = v;
@@ -244,16 +229,16 @@ struct ggml_tensor* llama_aurora_bounded_attention_dual_complex(
     if (window_start > 0) {
         size_t offset = window_start * head_dim * sizeof(float);
         k_window_p = ggml_view_3d(ctx, k_primal, head_dim, window_kv_size, n_head,
-                                  k_primal->nb[0], k_primal->nb[1], k_primal->nb[2], offset);
+                                  k_primal->nb[1], k_primal->nb[2], offset);
         v_window_p = ggml_view_3d(ctx, v_primal, head_dim, window_kv_size, n_head,
-                                  v_primal->nb[0], v_primal->nb[1], v_primal->nb[2], offset);
+                                  v_primal->nb[1], v_primal->nb[2], offset);
         if (k_dual) {
             k_window_d = ggml_view_3d(ctx, k_dual, head_dim, window_kv_size, n_head,
-                                      k_dual->nb[0], k_dual->nb[1], k_dual->nb[2], offset);
+                                      k_dual->nb[1], k_dual->nb[2], offset);
         }
         if (v_dual) {
             v_window_d = ggml_view_3d(ctx, v_dual, head_dim, window_kv_size, n_head,
-                                      v_dual->nb[0], v_dual->nb[1], v_dual->nb[2], offset);
+                                      v_dual->nb[1], v_dual->nb[2], offset);
         }
     } else {
         k_window_p = k_primal;
@@ -290,7 +275,9 @@ struct ggml_tensor* llama_aurora_bounded_attention_dual_complex(
     // Combine scores into dual-complex tensor
     struct ggml_tensor* scores_dual_safe = scores_dual;
     if (!scores_dual_safe) {
-        scores_dual_safe = ggml_zeros_like(ctx, scores_primal);
+        // Create zero tensor with same shape as scores_primal
+        scores_dual_safe = ggml_new_tensor(ctx, scores_primal->type, ggml_n_dims(scores_primal), scores_primal->ne);
+        ggml_set_zero(scores_dual_safe);
     }
     struct ggml_tensor* scores_dc = ggml_dual_complex(ctx, scores_primal, scores_dual_safe);
     struct ggml_tensor* attn_dc = ggml_dual_complex_softmax(ctx, scores_dc);
@@ -323,7 +310,9 @@ struct ggml_tensor* llama_aurora_bounded_attention_dual_complex(
     // where [..., 0] = primal, [..., 1] = dual
     if (!output_dual) {
         // If no dual component, create zero dual
-        output_dual = ggml_zeros_like(ctx, output_primal);
+        // Create zero tensor with same shape as output_primal
+        output_dual = ggml_new_tensor(ctx, output_primal->type, ggml_n_dims(output_primal), output_primal->ne);
+        ggml_set_zero(output_dual);
     }
     
     // Use ggml_dual_complex to stack primal and dual

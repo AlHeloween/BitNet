@@ -1,8 +1,8 @@
 #include "ggml-dq-linear.h"
 #include "ggml-dual-quaternion.h"
 #include "ggml.h"
-#include "../../lib/math_dualQuat.h"
-#include "../../lib/math_Quat.h"
+#include "../../../lib/math_dualQuat.h"
+#include "../../../lib/math_Quat.h"
 
 #include <cmath>
 
@@ -36,9 +36,9 @@ struct ggml_tensor* ggml_dq_linear(
     // bias: [out_features, 8] or NULL
     // output: [batch, seq, out_features, 8]
     
-    GGML_ASSERT(x->n_dims == 4);
+    GGML_ASSERT(ggml_n_dims(x) == 4);
     GGML_ASSERT(x->ne[3] == 8);  // Last dim must be 8 (dual quaternion)
-    GGML_ASSERT(weight->n_dims == 3);
+    GGML_ASSERT(ggml_n_dims(weight) == 3);
     GGML_ASSERT(weight->ne[2] == 8);
     GGML_ASSERT(x->ne[2] == weight->ne[1]);  // in_features must match
     

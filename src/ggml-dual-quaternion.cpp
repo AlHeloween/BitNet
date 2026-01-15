@@ -1,7 +1,7 @@
 #include "ggml-dual-quaternion.h"
 #include "ggml.h"
-#include "../../lib/math_dualQuat.h"
-#include "../../lib/math_Quat.h"
+#include "../../../lib/math_dualQuat.h"
+#include "../../../lib/math_Quat.h"
 
 #include <cmath>
 #include <cstring>
@@ -13,11 +13,11 @@ struct ggml_tensor* ggml_dual_quaternion_hamilton_product(
     struct ggml_tensor* q1,
     struct ggml_tensor* q2
 ) {
-    GGML_ASSERT(q1->n_dims == q2->n_dims);
-    for (int i = 0; i < q1->n_dims; i++) {
+    GGML_ASSERT(ggml_n_dims(q1) == ggml_n_dims(q2));
+    for (int i = 0; i < ggml_n_dims(q1); i++) {
         GGML_ASSERT(q1->ne[i] == q2->ne[i]);
     }
-    GGML_ASSERT(q1->ne[q1->n_dims - 1] == 8);  // Last dim must be 8
+    GGML_ASSERT(q1->ne[ggml_n_dims(q1) - 1] == 8);  // Last dim must be 8
     
     struct ggml_tensor* result = ggml_dup_tensor(ctx, q1);
     
@@ -26,7 +26,7 @@ struct ggml_tensor* ggml_dual_quaternion_hamilton_product(
     float* out_data = (float*)result->data;
     
     int n_elements = 1;
-    for (int i = 0; i < q1->n_dims - 1; i++) {
+    for (int i = 0; i < ggml_n_dims(q1) - 1; i++) {
         n_elements *= q1->ne[i];
     }
     
@@ -72,7 +72,7 @@ struct ggml_tensor* ggml_dual_quaternion_conjugate(
     float* out_data = (float*)result->data;
     
     int n_elements = 1;
-    for (int i = 0; i < dq->n_dims - 1; i++) {
+    for (int i = 0; i < ggml_n_dims(dq) - 1; i++) {
         n_elements *= dq->ne[i];
     }
     
@@ -108,7 +108,7 @@ struct ggml_tensor* ggml_dual_quaternion_normalize(
     float* out_data = (float*)result->data;
     
     int n_elements = 1;
-    for (int i = 0; i < dq->n_dims - 1; i++) {
+    for (int i = 0; i < ggml_n_dims(dq) - 1; i++) {
         n_elements *= dq->ne[i];
     }
     
@@ -144,7 +144,7 @@ struct ggml_tensor* ggml_dual_quaternion_inverse(
     float* out_data = (float*)result->data;
     
     int n_elements = 1;
-    for (int i = 0; i < dq->n_dims - 1; i++) {
+    for (int i = 0; i < ggml_n_dims(dq) - 1; i++) {
         n_elements *= dq->ne[i];
     }
     
@@ -175,7 +175,7 @@ struct ggml_tensor* ggml_dual_quaternion_rotation(
     struct ggml_tensor* dq
 ) {
     // Extract [..., 0:4] from [..., 8]
-    int n_dims = dq->n_dims;
+    int n_dims = ggml_n_dims(dq);
     int64_t* ne = new int64_t[n_dims];
     for (int i = 0; i < n_dims - 1; i++) {
         ne[i] = dq->ne[i];
@@ -208,7 +208,7 @@ struct ggml_tensor* ggml_dual_quaternion_translation(
     struct ggml_tensor* dq
 ) {
     // Extract [..., 4:8] from [..., 8]
-    int n_dims = dq->n_dims;
+    int n_dims = ggml_n_dims(dq);
     int64_t* ne = new int64_t[n_dims];
     for (int i = 0; i < n_dims - 1; i++) {
         ne[i] = dq->ne[i];
@@ -241,8 +241,8 @@ struct ggml_tensor* ggml_dual_quaternion_add(
     struct ggml_tensor* dq1,
     struct ggml_tensor* dq2
 ) {
-    GGML_ASSERT(dq1->n_dims == dq2->n_dims);
-    for (int i = 0; i < dq1->n_dims; i++) {
+    GGML_ASSERT(ggml_n_dims(dq1) == ggml_n_dims(dq2));
+    for (int i = 0; i < ggml_n_dims(dq1); i++) {
         GGML_ASSERT(dq1->ne[i] == dq2->ne[i]);
     }
     
@@ -255,6 +255,5 @@ struct ggml_tensor* ggml_dual_quaternion_scale(
     struct ggml_tensor* dq,
     float scalar
 ) {
-    struct ggml_tensor* scalar_tensor = ggml_new_f32(ctx, scalar);
-    return ggml_scale(ctx, dq, scalar_tensor);
+    return ggml_scale(ctx, dq, scalar);
 }

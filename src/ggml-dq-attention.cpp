@@ -1,8 +1,8 @@
 #include "ggml-dq-attention.h"
 #include "ggml-dual-quaternion.h"
 #include "ggml.h"
-#include "../../lib/math_dualQuat.h"
-#include "../../lib/math_Quat.h"
+#include "../../../lib/math_dualQuat.h"
+#include "../../../lib/math_Quat.h"
 
 #include <cmath>
 
@@ -40,9 +40,9 @@ struct ggml_tensor* ggml_dq_attention(
     // v: [batch, seq_k, 8]
     // output: [batch, seq_q, 8]
     
-    GGML_ASSERT(q->n_dims == 3);
-    GGML_ASSERT(k->n_dims == 3);
-    GGML_ASSERT(v->n_dims == 3);
+    GGML_ASSERT(ggml_n_dims(q) == 3);
+    GGML_ASSERT(ggml_n_dims(k) == 3);
+    GGML_ASSERT(ggml_n_dims(v) == 3);
     GGML_ASSERT(q->ne[2] == 8);
     GGML_ASSERT(k->ne[2] == 8);
     GGML_ASSERT(v->ne[2] == 8);

@@ -1,7 +1,7 @@
 #include "ggml-lattice-addressing.h"
 #include "ggml.h"
-#include "../../lib/math_dualQuat.h"
-#include "../../lib/math_Quat.h"
+#include "../../../lib/math_dualQuat.h"
+#include "../../../lib/math_Quat.h"
 
 #include <cmath>
 #include <cstring>
@@ -33,7 +33,7 @@ struct ggml_tensor* ggml_lattice_address_to_centroid(
         return NULL;
     }
     
-    GGML_ASSERT(sierpinski_centroids->n_dims == 3);
+    GGML_ASSERT(ggml_n_dims(sierpinski_centroids) == 3);
     GGML_ASSERT(addr->level < sierpinski_centroids->ne[0]);
     GGML_ASSERT(addr->index < sierpinski_centroids->ne[1]);
     
@@ -65,7 +65,7 @@ struct lattice_address ggml_lattice_centroid_to_address(
         return result;
     }
     
-    GGML_ASSERT(sierpinski_centroids->n_dims == 3);
+    GGML_ASSERT(ggml_n_dims(sierpinski_centroids) == 3);
     
     int n_levels = (int)sierpinski_centroids->ne[0];
     int n_per_level = (int)sierpinski_centroids->ne[1];

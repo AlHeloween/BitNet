@@ -7,6 +7,10 @@
 #include <iomanip>
 #include <random>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Simple SHA256 implementation (no external dependencies)
 // Using a simplified hash for inputs_hash (can be replaced with proper SHA256 if needed)
 

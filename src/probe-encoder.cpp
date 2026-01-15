@@ -3,8 +3,8 @@
 #include "ggml-dq-attention.h"
 #include "ggml-dual-quaternion.h"
 #include "ggml.h"
-#include "../../lib/math_dualQuat.h"
-#include "../../lib/math_Quat.h"
+#include "../../../lib/math_dualQuat.h"
+#include "../../../lib/math_Quat.h"
 
 #include <cmath>
 
@@ -19,7 +19,7 @@ struct ggml_tensor* probe_encode(
     // input_embeddings: [batch, seq, hidden_dim]
     // output: [batch, seq, hidden_size, 8] (dual quaternion latents)
     
-    GGML_ASSERT(input_embeddings->n_dims == 3);
+    GGML_ASSERT(ggml_n_dims(input_embeddings) == 3);
     
     int batch_size = input_embeddings->ne[0];
     int seq_len = input_embeddings->ne[1];

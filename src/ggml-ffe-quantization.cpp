@@ -1,7 +1,7 @@
 #include "ggml-ffe-quantization.h"
 #include "ggml.h"
-#include "../../lib/math_dualQuat.h"
-#include "../../lib/math_Quat.h"
+#include "../../../lib/math_dualQuat.h"
+#include "../../../lib/math_Quat.h"
 
 #include <cmath>
 #include <cstring>
@@ -30,7 +30,7 @@ struct ggml_tensor* ggml_ffe_quantize(
     }
     
     // Validate inputs
-    GGML_ASSERT(sierpinski_centroids->n_dims == 3);
+    GGML_ASSERT(ggml_n_dims(sierpinski_centroids) == 3);
     GGML_ASSERT(sierpinski_centroids->ne[2] == 8);  // Last dim must be 8 (dual quaternion)
     
     int n_levels = (int)sierpinski_centroids->ne[0];
@@ -41,15 +41,15 @@ struct ggml_tensor* ggml_ffe_quantize(
     int batch_size = 1;
     int seq_len = 1;
     
-    if (dual_quaternion->n_dims == 1) {
+    if (ggml_n_dims(dual_quaternion) == 1) {
         // Single dual quaternion [8]
         is_scalar = true;
         GGML_ASSERT(dual_quaternion->ne[0] == 8);
-    } else if (dual_quaternion->n_dims == 2) {
+    } else if (ggml_n_dims(dual_quaternion) == 2) {
         // [seq, 8]
         seq_len = (int)dual_quaternion->ne[0];
         GGML_ASSERT(dual_quaternion->ne[1] == 8);
-    } else if (dual_quaternion->n_dims == 3) {
+    } else if (ggml_n_dims(dual_quaternion) == 3) {
         // [batch, seq, 8]
         batch_size = (int)dual_quaternion->ne[0];
         seq_len = (int)dual_quaternion->ne[1];
@@ -62,7 +62,7 @@ struct ggml_tensor* ggml_ffe_quantize(
     struct ggml_tensor* result = NULL;
     if (is_scalar) {
         result = ggml_new_tensor_1d(ctx, GGML_TYPE_I32, 1);
-    } else if (dual_quaternion->n_dims == 2) {
+    } else if (ggml_n_dims(dual_quaternion) == 2) {
         result = ggml_new_tensor_1d(ctx, GGML_TYPE_I32, seq_len);
     } else {
         int64_t out_ne[2] = {batch_size, seq_len};
@@ -135,7 +135,7 @@ struct ggml_tensor* ggml_ffe_dequantize(
         return NULL;
     }
     
-    GGML_ASSERT(sierpinski_centroids->n_dims == 3);
+    GGML_ASSERT(ggml_n_dims(sierpinski_centroids) == 3);
     GGML_ASSERT(sierpinski_centroids->ne[2] == 8);
     
     // Handle different input shapes
@@ -143,11 +143,11 @@ struct ggml_tensor* ggml_ffe_dequantize(
     int batch_size = 1;
     int seq_len = 1;
     
-    if (addresses->n_dims == 0 || (addresses->n_dims == 1 && addresses->ne[0] == 1)) {
+    if (ggml_n_dims(addresses) == 0 || (ggml_n_dims(addresses) == 1 && addresses->ne[0] == 1)) {
         is_scalar = true;
-    } else if (addresses->n_dims == 1) {
+    } else if (ggml_n_dims(addresses) == 1) {
         seq_len = (int)addresses->ne[0];
-    } else if (addresses->n_dims == 2) {
+    } else if (ggml_n_dims(addresses) == 2) {
         batch_size = (int)addresses->ne[0];
         seq_len = (int)addresses->ne[1];
     } else {
@@ -158,7 +158,7 @@ struct ggml_tensor* ggml_ffe_dequantize(
     struct ggml_tensor* result = NULL;
     if (is_scalar) {
         result = ggml_new_tensor_1d(ctx, GGML_TYPE_F32, 8);
-    } else if (addresses->n_dims == 1) {
+    } else if (ggml_n_dims(addresses) == 1) {
         int64_t out_ne[2] = {seq_len, 8};
         result = ggml_new_tensor(ctx, GGML_TYPE_F32, 2, out_ne);
     } else {
@@ -200,7 +200,7 @@ struct ggml_tensor* ggml_ffe_get_centroid(
     }
     
     // Address should be scalar
-    GGML_ASSERT(address->n_dims == 0 || (address->n_dims == 1 && address->ne[0] == 1));
+    GGML_ASSERT(ggml_n_dims(address) == 0 || (ggml_n_dims(address) == 1 && address->ne[0] == 1));
     
     int32_t addr_bits = ((const int32_t*)address->data)[0];
     struct ffe_address addr = ffe_address_decode((uint16_t)addr_bits);

@@ -463,9 +463,9 @@ struct ggml_tensor* llama_aurora_hybrid_fractal_attention(
         // Create views of the windowed portion
         size_t offset = window_start * head_dim * sizeof(float);
         k_window = ggml_view_3d(ctx, k, head_dim, window_kv_size, n_head,
-                                k->nb[0], k->nb[1], k->nb[2], offset);
+                                k->nb[1], k->nb[2], offset);
         v_window = ggml_view_3d(ctx, v, head_dim, window_kv_size, n_head,
-                                v->nb[0], v->nb[1], v->nb[2], offset);
+                                v->nb[1], v->nb[2], offset);
     } else {
         k_window = k;
         v_window = v;

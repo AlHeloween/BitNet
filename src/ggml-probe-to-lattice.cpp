@@ -29,7 +29,7 @@ int ggml_probe_to_lattice_pipeline(
     // Or convert from embeddings to dual quaternions
     struct ggml_tensor* dq_latents = NULL;
     
-    if (input_embeddings->n_dims == 3 && input_embeddings->ne[2] == 8) {
+    if (ggml_n_dims(input_embeddings) == 3 && input_embeddings->ne[2] == 8) {
         // Already dual quaternions
         dq_latents = input_embeddings;
     } else {

@@ -1,8 +1,8 @@
 #include "ggml-transcender.h"
 #include "ggml.h"
 #include "ggml-lattice-storage.h"
-#include "../../lib/math_dualQuat.h"
-#include "../../lib/math_Quat.h"
+#include "../../../lib/math_dualQuat.h"
+#include "../../../lib/math_Quat.h"
 
 #include <cmath>
 #include <cstring>
@@ -21,9 +21,9 @@ struct ggml_tensor* ggml_transcender_synthesize_triplet(
     }
     
     // Validate inputs
-    GGML_ASSERT(entry_a->n_dims == 1 && entry_a->ne[0] == 8);
-    GGML_ASSERT(entry_b->n_dims == 1 && entry_b->ne[0] == 8);
-    GGML_ASSERT(entry_c->n_dims == 1 && entry_c->ne[0] == 8);
+    GGML_ASSERT(ggml_n_dims(entry_a) == 1 && entry_a->ne[0] == 8);
+    GGML_ASSERT(ggml_n_dims(entry_b) == 1 && entry_b->ne[0] == 8);
+    GGML_ASSERT(ggml_n_dims(entry_c) == 1 && entry_c->ne[0] == 8);
     
     // Create output tensor [8]
     struct ggml_tensor* result = ggml_new_tensor_1d(ctx, GGML_TYPE_F32, 8);
