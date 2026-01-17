@@ -7,17 +7,18 @@
 #include <iomanip>
 #include <random>
 
+// CUDA headers must be included BEFORE extern "C" because they contain C++ templates
+#ifdef GGML_USE_CUDA
+#include <cuda_runtime.h>
+#include <curand.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 // Simple SHA256 implementation (no external dependencies)
 // Using a simplified hash for inputs_hash (can be replaced with proper SHA256 if needed)
-
-#ifdef GGML_USE_CUDA
-#include <cuda_runtime.h>
-#include <curand.h>
-#endif
 
 // Generate UUID v4 hex string (32 hex chars, no dashes)
 static char* generate_uuid_hex() {

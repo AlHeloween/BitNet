@@ -6,6 +6,15 @@
 #include <math.h>
 #include <stdint.h>
 
+// Portable strdup wrapper for Windows compatibility
+// On Windows, use _strdup to avoid deprecation warnings
+#ifdef _WIN32
+    #ifdef strdup
+        #undef strdup
+    #endif
+    #define strdup _strdup
+#endif
+
 // MD5 implementation (simple, for portability)
 // Note: For production, consider using a proper MD5 library
 static void md5_hash(const unsigned char* data, size_t len, unsigned char* digest) {

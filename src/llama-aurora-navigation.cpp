@@ -9,6 +9,7 @@
 #include <vector>
 #include <cstring>
 #include <cstdlib>
+#include <cstdint>
 
 #ifdef GGML_USE_CUDA
 #include <cuda_runtime.h>
@@ -215,7 +216,8 @@ struct ggml_tensor* llama_aurora_fractal_drill_down(
     std::vector<float> scores_dq(n_pairs * 8);
     std::vector<float> similarities(n_pairs);
     std::vector<float> velocities(n_pairs);
-    std::vector<bool> should_drill_down(n_pairs);
+    // Use uint8_t instead of bool for contiguous memory (std::vector<bool> is specialized and doesn't have .data())
+    std::vector<uint8_t> should_drill_down(n_pairs);
     
 #ifdef GGML_USE_CUDA
     // Use CUDA kernels for batch processing
@@ -356,8 +358,8 @@ struct ggml_tensor* llama_aurora_fractal_drill_down(
             score_dq_result[7] * score_dq_result[7]
         );
         
-        // Policy gate
-        should_drill_down[i] = (similarities[i] > 0.5f) && (velocities[i] > nav_params->tau);
+        // Policy gate (store as uint8_t: 0 = false, 1 = true)
+        should_drill_down[i] = ((similarities[i] > 0.5f) && (velocities[i] > nav_params->tau)) ? 1 : 0;
         
         // Store score_dq
         memcpy(&scores_dq[i * 8], score_dq_result, 8 * sizeof(float));

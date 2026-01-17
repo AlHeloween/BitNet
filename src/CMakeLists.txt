@@ -58,9 +58,19 @@ if (NOT (CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "GN
 endif()
 
 # CUDA support for GPU acceleration
-find_package(CUDA QUIET)
-if(CUDA_FOUND)
-    enable_language(CUDA)
+# Use modern CUDAToolkit instead of deprecated FindCUDA module
+# If CUDAToolkit_ROOT is set (e.g., to short path to avoid spaces), prefer it over registry/discovery
+find_package(CUDAToolkit QUIET)
+if(CUDAToolkit_FOUND)
+    # If CMAKE_CUDA_COMPILER is set (e.g., to short path), use it to avoid shell path splitting
+    # Otherwise, let CMake auto-detect
+    if(DEFINED CMAKE_CUDA_COMPILER)
+        # CUDA compiler already set (likely to short path to avoid spaces)
+        enable_language(CUDA)
+    else()
+        # Let CMake auto-detect, but it should handle paths with spaces
+        enable_language(CUDA)
+    endif()
     
     # CUDA kernels for Aurora operations
     set(CUDA_SOURCES
@@ -82,7 +92,14 @@ if(CUDA_FOUND)
     set_property(SOURCE ${CUDA_SOURCES} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
     
     # Add CUDA include directories
-    include_directories(${CUDA_INCLUDE_DIRS})
+    # Prefer explicitly set paths (short paths) over discovered paths (may have spaces)
+    if(DEFINED CUDAToolkit_INCLUDE_DIR AND EXISTS "${CUDAToolkit_INCLUDE_DIR}")
+        # Use explicitly set include dir (likely a short path)
+        include_directories("${CUDAToolkit_INCLUDE_DIR}")
+    elseif(DEFINED CUDAToolkit_INCLUDE_DIRS)
+        # Fall back to CUDAToolkit-provided paths
+        include_directories(${CUDAToolkit_INCLUDE_DIRS})
+    endif()
     
     message(STATUS "CUDA found: Aurora GPU acceleration enabled")
 else()
@@ -106,9 +123,11 @@ if(BUILD_AURORA_STANDALONE)
         ${CMAKE_CURRENT_SOURCE_DIR}/../../lib
     )
     
-    if(CUDA_FOUND)
-        target_link_libraries(aurora-core PUBLIC ${CUDA_LIBRARIES})
-        target_include_directories(aurora-core PUBLIC ${CUDA_INCLUDE_DIRS})
+    if(CUDAToolkit_FOUND)
+        # CUDAToolkit provides libraries via imported targets, but for compatibility
+        # we can still link against the toolkit libraries
+        target_link_libraries(aurora-core PUBLIC CUDA::cudart)
+        target_include_directories(aurora-core PUBLIC ${CUDAToolkit_INCLUDE_DIRS})
     endif()
     
     target_link_libraries(aurora-core PUBLIC m)  # Math library
@@ -163,8 +182,8 @@ if(BUILD_AURORA_CLI)
     
     target_link_libraries(aurora-cli PRIVATE aurora-core)
     
-    if(CUDA_FOUND)
-        target_link_libraries(aurora-cli PRIVATE ${CUDA_LIBRARIES})
+    if(CUDAToolkit_FOUND)
+        target_link_libraries(aurora-cli PRIVATE CUDA::cudart)
     endif()
     
     set_target_properties(aurora-cli PROPERTIES
@@ -271,7 +290,7 @@ if(BUILD_AURORA_TESTS)
         
         target_link_libraries(aurora-test-real-text PRIVATE aurora-core)
         
-        if(CUDA_FOUND)
+        if(CUDAToolkit_FOUND)
             target_link_libraries(aurora-test-real-text PRIVATE ${CUDA_LIBRARIES})
         endif()
         
