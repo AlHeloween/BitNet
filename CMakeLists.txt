@@ -39,7 +39,14 @@ endif()
 find_package(Threads REQUIRED)
 
 add_subdirectory(src)
-set(LLAMA_BUILD_SERVER ON CACHE BOOL "Build llama.cpp server" FORCE)
+
+# llama.cpp is included as a subdirectory, which means upstream defaults to
+# disabling tools/examples unless LLAMA_STANDALONE=ON.
+# BitNet workflows in this repo expect the `llama-cli` and `llama-server` binaries,
+# so force-enable the required llama.cpp options explicitly.
+set(LLAMA_BUILD_COMMON ON CACHE BOOL "llama: build common utils library" FORCE)
+set(LLAMA_BUILD_TOOLS  ON CACHE BOOL "llama: build tools (llama-cli, etc.)" FORCE)
+set(LLAMA_BUILD_SERVER ON CACHE BOOL "llama: build server (llama-server)" FORCE)
 add_subdirectory(3rdparty/llama.cpp)
 
 # install
